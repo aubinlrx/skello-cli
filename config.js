@@ -1,0 +1,11 @@
+const HEROKU_PIPELINE_ID = process.env.HEROKU_PIPELINE_ID;
+const HEROKU_API_KEY = process.env.HEROKU_API_KEY;
+const GITHUB_API_KEY = process.env.GITHUB_API_KEY;
+const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
+
+module.exports = {
+  HEROKU_API_KEY,
+  HEROKU_PIPELINE_ID,
+  GITHUB_API_KEY,
+  SLACK_WEBHOOK_URL,
+};
