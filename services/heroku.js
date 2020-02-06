@@ -21,7 +21,41 @@ async function listReviewApps() {
   return data;
 }
 
+async function listTestRuns() {
+  const res = await fetch(`${baseUrl}/pipelines/${config.HEROKU_PIPELINE_ID}/test-runs`, { headers });
+  const data = await res.json();
+
+  return data;
+}
+
+async function getTestRun(id) {
+  const res = await fetch(`${baseUrl}/test-runs/${id}`, { headers });
+  const data = await res.json();
+
+  return data;
+}
+
+async function listTestCases(testRunId) {
+  const res = await fetch(`${baseUrl}/test-runs/${testRunId}/test-cases`, { headers });
+  const data = await res.json();
+
+  return data; 
+}
+
+
+async function listTestNodes(testRunId) {
+  const res = await fetch(`${baseUrl}/test-runs/${testRunId}/test-nodes`, { headers });
+  const data = await res.json();
+
+  return data;
+}
+
+
 module.exports = {
   listApps,
   listReviewApps,
+  listTestRuns,
+  getTestRun,
+  listTestCases,
+  listTestNodes,
 };

@@ -1,10 +1,11 @@
 const cliSelect = require('cli-select');
 const chalk = require('chalk');
-const open = require('open');
+const openInBrowser = require('open');
 const ora = require('ora');
 const figures = require('figures');
 const moment = require('moment');
 const _ = require('lodash');
+const currentBranchName = require('current-git-branch');
 
 // Services
 const SlackService = require('../services/slack.js');
@@ -17,11 +18,12 @@ const HerokuService = require('../services/heroku.js');
 const helpText =
 `
 ${chalk.bold('NAME')}
-    skello-review-app Manage active review apps
+    skello-apps Manage active review apps
 
 ${chalk.bold('SYNOPSIS')}
-    ${chalk.underline('skello')} ${chalk.underline('review-app')} ${chalk.underline('list')}
-    ${chalk.underline('skello')} ${chalk.underline('review-app')} ${chalk.underline('push')}
+    ${chalk.underline('skello')} ${chalk.underline('apps')} ${chalk.underline('list')}
+    ${chalk.underline('skello')} ${chalk.underline('apps')} ${chalk.underline('push')}
+    ${chalk.underline('skello')} ${chalk.underline('apps')} ${chalk.underline('open')}
 `;
 
 /*
@@ -45,7 +47,7 @@ async function list() {
     unselected: figures.circle,
   }).then(response => {
       console.log(`Opening ${response.value.pullRequest.head.ref} in browser...`);
-      open(response.value.url);
+      openInBrowser(response.value.url);
     })
     .catch(error => null)
 }
@@ -70,8 +72,45 @@ async function push() {
   SlackService.notify(slackMessage);
 }
 
+/*
+* [COMMAND] skello apps open <branch> | [current]: open a specific branch
+*/
+async function open(branchName) {
+  if (!branchName || branchName === '') {
+    console.log('Please enter a valid branch name or the current keyword.');
+    return;
+  }
+
+  if (branchName === 'current') {
+    openAppByBranchName(currentBranchName());
+  } else {
+    openAppByBranchName(branchName);
+  }
+}
+
+async function openAppByBranchName(branchName) {
+  const spinner = ora(`Loading app infos for ${branchName}...`).start();
+  const reviewApps = await HerokuService.listReviewApps();
+  const apps = await HerokuService.listApps();
+  spinner.stop();
+
+  const reviewApp = reviewApps.find(ra => ra.branch === branchName);
+
+  if (reviewApp) {
+    const app = apps.find(a => a.id === reviewApp.app.id);
+
+    if (app) {
+      openInBrowser(app.web_url);  
+    } else {
+      console.log('Can\'t open review app.')
+    }
+  } else {
+    console.log('The review app doesn\t exist.');
+  }
+}
+
 async function getAppInfos() {
-  const spinner = ora('Loading review apps').start();
+  const spinner = ora('Loading review apps...').start();
 
   const pulls = await GithubService.listPullRequests();
   const apps = await HerokuService.listApps();
@@ -113,4 +152,5 @@ module.exports = {
   helpText,
   push,
   list,
+  open,
 };

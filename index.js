@@ -18,17 +18,31 @@ if (mandatoryEnvVars.some(key => !config[key])) {
 
 const args = process.argv.slice(2);
 
-if (args[0] === 'review-app') {
+if (args[0] === 'apps') {
   const subCommand = args[1];
 
   if (args.includes('--help')) {
-    console.log(commands.reviewApp.helpText);
+    console.log(commands.apps.helpText);
   } else if (subCommand === 'list') {
-    commands.reviewApp.list();
+    commands.apps.list();
   } else if (subCommand === 'push') {
-    commands.reviewApp.push();
+    commands.apps.push();
+  } else if (subCommand === 'open') {
+    commands.apps.open(args[2]);
   } else {
-    console.log(commands.reviewApp.helpText);
+    console.log(commands.apps.helpText);
+  }
+} else if (args[0] === 'tests') {
+  const subCommand = args[1];
+
+  if (args.includes('--help')) {
+    console.log(commands.tests.helpText);
+  } else if (subCommand === 'status') {
+    commands.tests.status(args[2]);
+  } else if (subCommand === 'list') {
+    commands.tests.list();
+  } else {
+    console.log(commands.tests.helpText);
   }
 } else if (args.includes('--help')) {
   console.log(commands.helpText);
