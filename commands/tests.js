@@ -187,6 +187,4 @@ module.exports = {
   NAME,
   helpText,
   handle,
-  status,
-  list,
 };

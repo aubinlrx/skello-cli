@@ -14,6 +14,14 @@ async function listPullRequests() {
   return data;
 }
 
+async function getPullRequest(number) {
+  const res = await fetch(`${baseUrl}/pulls/${number}`, { headers });
+  const data = await res.json();
+
+  return data;
+}
+
 module.exports = {
   listPullRequests,
+  getPullRequest,
 };

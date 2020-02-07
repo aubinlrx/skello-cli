@@ -180,7 +180,4 @@ module.exports = {
   NAME,
   helpText,
   handle,
-  push,
-  list,
-  open,
 };
