@@ -12,6 +12,11 @@ const ora = require('ora');
 const HerokuService = require('../services/heroku.js');
 
 /*
+* [NAME]
+*/
+const NAME = 'tests';
+
+/*
 * [HELP] tests help message
 */
 const helpText =
@@ -20,8 +25,31 @@ ${chalk.bold('NAME')}
     skello-tests Manage pending tests
 
 ${chalk.bold('SYNOPSIS')}
-    ${chalk.underline('skello')} ${chalk.underline('tests')} ${chalk.underline('status')}
+    ${chalk.underline('skello')} ${chalk.underline(NAME)} ${chalk.underline('status')}
 `;
+
+/*
+* [HANDLER]
+*/
+function handle(args) {
+  const [_, subCommand, branchName, ...tail] = args;
+
+  if (args.includes('--help')) {
+    console.log(helpText);
+    return;
+  }
+
+  switch(subCommand) {
+    case 'status':
+      status(branchName);
+      break;
+    case 'list':
+      list();
+      break;
+    default:
+      console.log(helpText);
+  }
+}
 
 /*
 * [COMMAND] skello tests status: 
@@ -156,7 +184,9 @@ async function parseTestFailuresFor(test) {
 }
 
 module.exports = {
+  NAME,
   helpText,
+  handle,
   status,
   list,
 };

@@ -1,5 +1,6 @@
 const apps = require('./apps.js');
 const tests = require('./tests.js');
+const pulls = require('./pulls.js');
 
 const helpText =
 `usage: skello [--help] <command>
@@ -13,4 +14,5 @@ module.exports = {
   helpText,
   apps,
   tests,
+  pulls,
 };

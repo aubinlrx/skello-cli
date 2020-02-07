@@ -12,6 +12,8 @@ const SlackService = require('../services/slack.js');
 const GithubService = require('../services/github.js');
 const HerokuService = require('../services/heroku.js');
 
+const NAME = 'apps';
+
 /*
 * [HELP] review-app help message
 */
@@ -21,10 +23,36 @@ ${chalk.bold('NAME')}
     skello-apps Manage active review apps
 
 ${chalk.bold('SYNOPSIS')}
-    ${chalk.underline('skello')} ${chalk.underline('apps')} ${chalk.underline('list')}
-    ${chalk.underline('skello')} ${chalk.underline('apps')} ${chalk.underline('push')}
-    ${chalk.underline('skello')} ${chalk.underline('apps')} ${chalk.underline('open')}
+    ${chalk.underline('skello')} ${chalk.underline(NAME)} ${chalk.underline('list')}
+    ${chalk.underline('skello')} ${chalk.underline(NAME)} ${chalk.underline('push')}
+    ${chalk.underline('skello')} ${chalk.underline(NAME)} ${chalk.underline('open')}
 `;
+
+/*
+* [HANDLER]
+*/
+function handle(args) {
+  const [_, subCommand, branchName, ...tail] = args;
+
+  if (args.includes('--help')) {
+    console.log(helpText);
+    return;
+  }
+
+  switch(subCommand) {
+    case 'list':
+      list();
+      break;
+    case 'push':
+      push();
+      break;
+    case 'open':
+      open(branchName);
+      break;
+    default:
+      console.log(helpText);
+  }
+}
 
 /*
 * [COMMAND] skello review-app list: list all active review app and permit to open them in browser
@@ -149,7 +177,9 @@ async function getAppInfos() {
 }
 
 module.exports = {
+  NAME,
   helpText,
+  handle,
   push,
   list,
   open,
