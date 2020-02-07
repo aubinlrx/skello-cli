@@ -34,7 +34,9 @@ async function status(branchName) {
 
   branchName = branchName === 'current' ? currentBranchName() : branchName;
 
-  const result = await parseTestFailuresFor(branchName);
+  const tests = await HerokuService.listTestRuns();
+  const test = tests.find(t => t.commit_branch === branchName);
+  const result = await parseTestFailuresFor(test);
 
   Object.keys(result).forEach((nodeId) => {
     console.log(`Node #${nodeId}`);
@@ -90,7 +92,7 @@ async function list() {
     unselected: figures.circle,
   }).then(async function(response) {
       const spinner = ora(`Loading failures ouput...`).start();
-      const result = await parseTestFailuresFor(response.value.commit_branch);
+      const result = await parseTestFailuresFor(response.value);
       spinner.stop();
       
       Object.keys(result).forEach((nodeId) => {
@@ -105,12 +107,10 @@ async function list() {
         }
       });
     })
-    .catch(error => null)
+    .catch(error => console.log(error))
 }
 
-async function parseTestFailuresFor(branchName) {
-  const tests = await HerokuService.listTestRuns();
-  const test = tests.find(t => t.commit_branch === branchName);
+async function parseTestFailuresFor(test) {
   let nodes = await HerokuService.listTestNodes(test.id);
 
   if (test.status === 'succeeded') {
@@ -131,10 +131,22 @@ async function parseTestFailuresFor(branchName) {
       result[node.index] = [];
 
       data.split('\n').forEach((line) => {
-        const match = line.match(/^rspec\s+(.+):(\d+)/)
+        const rspecMatch = line.match(/^rspec\s+(.+):(\d+)/)
 
-        if (match) {
-          result[node.index].push(match[0]);
+        if (rspecMatch) {
+          result[node.index].push(rspecMatch[0]);
+        }
+
+        const rubocopMatch = line.match(/^(.+):(\d+):(\d+):(.+)/)
+
+        if (rubocopMatch) {
+          result[node.index].push(rubocopMatch[0]);
+        }
+
+        const minitestMatch = line.match(/^bin\/rails\stest\s(.+):(\d+)/)
+
+        if (minitestMatch) {
+          result[node.index].push(minitestMatch[0]);
         }
       });
     }
