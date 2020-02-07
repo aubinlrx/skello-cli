@@ -19,6 +19,7 @@
     "moment": "^2.24.0",
     "node-fetch": "^2.6.0",
     "open": "^7.0.2",
-    "ora": "^4.0.3"
+    "ora": "^4.0.3",
+    "persistent-cache": "^1.1.1"
   }
 }
