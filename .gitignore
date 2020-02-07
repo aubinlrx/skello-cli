@@ -1,4 +1,4 @@
 /node_modules
-/cache
+/tmp
 .env
 .DS_Store

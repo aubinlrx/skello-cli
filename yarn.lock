@@ -245,10 +245,22 @@ mimic-fn@^2.1.0:
   resolved "https://registry.yarnpkg.com/mimic-fn/-/mimic-fn-2.1.0.tgz#7ed2c2ccccaf84d3ffcb7a69b57711fc2083401b"
   integrity sha512-OqbOk5oEQeAZ8WXWydlu9HJjz9WVdEIvamMCcXmuqUYjTknH/sqsWvhQ3vgwKFRR1HpjvNBKQ37nbJgYzGqGcg==
 
+minimist@0.0.8:
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/minimist/-/minimist-0.0.8.tgz#857fcabfc3397d2625b8228262e86aa7a011b05d"
+  integrity sha1-hX/Kv8M5fSYluCKCYuhqp6ARsF0=
+
 mkdirp-no-bin@^0.5.1:
   version "0.5.1"
   resolved "https://registry.yarnpkg.com/mkdirp-no-bin/-/mkdirp-no-bin-0.5.1.tgz#34c623196d36fb2ee2e561ab607305632e00619f"
   integrity sha1-NMYjGW02+y7i5WGrYHMFYy4AYZ8=
+
+mkdirp@~0.5.1:
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-0.5.1.tgz#30057438eac6cf7f8c4767f38648d6697d75c903"
+  integrity sha1-MAV0OOrGz3+MR2fzhkjWaX11yQM=
+  dependencies:
+    minimist "0.0.8"
 
 moment@^2.24.0:
   version "2.24.0"
@@ -264,6 +276,13 @@ node-fetch@^2.6.0:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.0.tgz#e633456386d4aa55863f676a7ab0daa8fdecb0fd"
   integrity sha512-8dG4H5ujfvFiqDmVu9fQ5bOHUC15JMjMY/Zumv26oOvvVJjM67KF8koCWIabKQ1GJIa9r2mMZscBq/TbdOcmNA==
+
+node-persist@^3.0.5:
+  version "3.0.5"
+  resolved "https://registry.yarnpkg.com/node-persist/-/node-persist-3.0.5.tgz#ee6128df8e0f9ea45ea80090b8dd9dd338408900"
+  integrity sha512-zJmBA58kI9QAxXLMc4NLswgzXVIqKfsfQtiySMF6eEQ3kVvoM3YHzcP0//L9u30Fqx3cYe1FL/a+fyB3VwO/oQ==
+  dependencies:
+    mkdirp "~0.5.1"
 
 node.extend@1.0.8:
   version "1.0.8"

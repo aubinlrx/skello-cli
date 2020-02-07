@@ -6,12 +6,9 @@ const ora = require('ora');
 const openInBrowser = require('open');
 const { parseSorter } = require('../utils/cli.js');
 const _ = require('lodash');
-const Cache = require('../utils/cache.js');
 
 // Services
 const GithubService = require('../services/github.js')
-
-const CACHE_KEY = 'skello-pulls-list';
 
 /*
 * [NAME]
@@ -56,9 +53,7 @@ function handle(args) {
 async function list(sorter) {
   let pullRequests = [];
 
-  if (!(pullRequests = Cache.get(CACHE_KEY))) {
-    pullRequests = await getPullRequests();
-  }
+  pullRequests = await getPullRequests();
 
   if (sorter) {
     pullRequests = _.sortBy(pullRequests, sorter.fields);
@@ -106,8 +101,6 @@ async function getPullRequests() {
     count++;
     pullRequests.push(pullRequest);
   }
-
-  Cache.set(CACHE_KEY, pullRequests);
 
   spinner.stop();
 

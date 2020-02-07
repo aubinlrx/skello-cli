@@ -1,17 +1,25 @@
 const fs = require('fs');
 const _ = require('lodash');
-const Cache = require('persistent-cache');
-const AppCache = new Cache({
-  name: 'skello-cli-cache',
-  duration: 30000,
-});
+const cache = require('node-persist');
 
-function get(key) {
-  return AppCache.getSync(key);
+async function init() {
+  await cache.init({
+    dir: 'tmp',
+    ttl: true,
+    expiredInterval: 1 * 60 * 1000, // 1 minutes
+  });
 }
 
-function set(key, data) {
-  return AppCache.putSync(key, data);
+async function get(key) {
+  await init();
+  const data = await cache.getItem(key);
+  return data;
+}
+
+async function set(key, data, ttl) {
+  await init();
+  const res = await cache.setItem(key, data, { ttl });
+  return res;
 }
 
 module.exports = {
