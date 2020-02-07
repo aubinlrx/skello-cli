@@ -8,6 +8,8 @@ const helpText =
 These are common Skello commands used in various sitations:
 
   apps Manage active review apps
+  pulls Manage active pull requests
+  tests Manage CI tests
 `;
 
 module.exports = {
