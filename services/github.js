@@ -17,7 +17,7 @@ async function listPullRequests() {
   const res = await fetch(`${baseUrl}/pulls?page=1&per_page=100`, { headers });
   const data = await res.json();
 
-  const res2 = await cache.set(cacheKey, data, 180000); // 3 minutes
+  await cache.set(cacheKey, data, 3 * 60 * 1000); // 3 minutes
 
   return data;
 }
@@ -31,7 +31,7 @@ async function getPullRequest(number) {
   const res = await fetch(`${baseUrl}/pulls/${number}`, { headers });
   const data = await res.json();
 
-  const res2 = await cache.set(cacheKey, data,  1800000); // 30 minutes
+  await cache.set(cacheKey, data,  30 * 60 * 1000); // 30 minutes
 
   return data;
 }

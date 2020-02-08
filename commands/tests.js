@@ -26,6 +26,7 @@ ${chalk.bold('NAME')}
 
 ${chalk.bold('SYNOPSIS')}
     ${chalk.underline('skello')} ${chalk.underline(NAME)} ${chalk.underline('status')}
+    ${chalk.underline('skello')} ${chalk.underline(NAME)} ${chalk.underline('list')}
 `;
 
 /*

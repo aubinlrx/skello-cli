@@ -1,5 +1,6 @@
 const config = require('../config.js');
 const fetch = require('node-fetch');
+const cache = require('../utils/cache.js');
 
 const baseUrl = 'https://api.heroku.com';
 const headers = { 
@@ -28,24 +29,45 @@ async function listTestRuns() {
   return data;
 }
 
-async function getTestRun(id) {
-  const res = await fetch(`${baseUrl}/test-runs/${id}`, { headers });
+async function getTestRun(testRunId) {
+  const cacheKey = `test-run-${testRunId}`;
+  const cachedData = await cache.get(cacheKey);
+
+  if (cachedData) return cachedData;
+
+  const res = await fetch(`${baseUrl}/test-runs/${testRunId}`, { headers });
   const data = await res.json();
+
+  await cache.set(cacheKey, data, 3 * 60 * 1000); // 3 minutes
 
   return data;
 }
 
 async function listTestCases(testRunId) {
+  const cacheKey = `test-runs-${testRunId}-test-cases`;
+  const cachedData = await cache.get(cacheKey);
+
+  if (cachedData) return cachedData;
+
   const res = await fetch(`${baseUrl}/test-runs/${testRunId}/test-cases`, { headers });
   const data = await res.json();
+
+  await cache.set(cacheKey, data, 3 * 60 * 1000); // 3 minutes
 
   return data; 
 }
 
 
 async function listTestNodes(testRunId) {
+  const cacheKey = `test-runs-${testRunId}-test-nodes`;
+  const cachedData = await cache.get(cacheKey);
+
+  if (cachedData) return cachedData;
+
   const res = await fetch(`${baseUrl}/test-runs/${testRunId}/test-nodes`, { headers });
   const data = await res.json();
+
+  await cache.set(cacheKey, data, 3 * 60 * 1000); // 3 minutes
 
   return data;
 }
