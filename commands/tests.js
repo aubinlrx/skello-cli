@@ -53,7 +53,7 @@ function handle(args) {
 }
 
 /*
-* [COMMAND] skello tests status: 
+* [COMMAND] skello tests status:
 */
 async function status(branchName) {
   if (!branchName || branchName === '') {
@@ -91,7 +91,7 @@ async function list() {
   tests = _.sortBy(tests, (test) => moment(test.updated_at).format('X')).reverse();
   tests = _.filter(tests, (test) => test.status === 'failed');
   const values = _.uniqBy(tests, (test) => test.commit_branch);
-  
+
   console.log(`${chalk.red.bold('?')} Please choose a branch:`);
 
   cliSelect({
@@ -111,6 +111,12 @@ async function list() {
           break;
       }
 
+      // Keep first line of commit message
+      const lf = value.commit_message.indexOf("\n");
+      if (lf != -1) {
+        value.commit_message = value.commit_message.substr(0, lf);
+      }
+
       if (selected) {
         return `${icon} [${chalk.blue.bold.underline(value.commit_branch)}] ${chalk.blue.bold(value.commit_message)}`;
       }
@@ -123,7 +129,7 @@ async function list() {
       const spinner = ora(`Loading failures ouput...`).start();
       const result = await parseTestFailuresFor(response.value);
       spinner.stop();
-      
+
       Object.keys(result).forEach((nodeId) => {
         console.log(`Node #${nodeId}`);
 
@@ -143,7 +149,7 @@ async function parseTestFailuresFor(test) {
   let nodes = await HerokuService.listTestNodes(test.id);
 
   if (test.status === 'succeeded') {
-    console.log('All tests passed successfully.');    
+    console.log('All tests passed successfully.');
     return;
   }
 
