@@ -1,7 +1,6 @@
 const chalk = require('chalk');
 const fetch = require('node-fetch');
-const figures = require('figures');
-const cliSelect = require('cli-select');
+const inquirer = require('inquirer');
 const ora = require('ora');
 const openInBrowser = require('open');
 const { parseSorter } = require('../utils/cli.js');
@@ -60,25 +59,20 @@ async function list(sorter) {
     if (sorter.direction === 'desc') pullRequests.reverse();
   }
 
-  cliSelect({
-    values: pullRequests,
-    valueRenderer: (value, selected) => {
-      const text = pullRequestText(value);
+  inquirer
+    .prompt({
+      type: 'list',
+      name: 'pull_request',
+      choices: pullRequests.map(pr => ({ name: getPullRequestName(pr), value: pr })),
+      message: 'Select pull request:',
+      pageSize: 50
+    })
+    .then(answers => {
+      const link = answers.pull_request.html_url;
 
-      if (selected) {
-        return `${chalk.blue(text)}`;
-      }
-
-      return `${text}`;
-    },
-    selected: chalk.blue(figures.circleFilled),
-    unselected: figures.circle,
-  }).then((response) => {
-    const link = response.value._links.html.href;
-
-    console.log(`Opening ${link} in browser...`);
-    openInBrowser(link);
-  }).catch(error => null);
+      console.log(`Opening ${link} in browser...`);
+      openInBrowser(link);
+    });
 }
 
 async function getPullRequests() {
@@ -95,7 +89,7 @@ async function getPullRequests() {
 
   let count = 1;
 
-  for (var i = pullRequestIds.length - 1; i >= 0; i--) {
+  for (let i = pullRequestIds.length - 1; i >= 0; i--) {
     spinner.prefixText = `[${count}/${pullRequestCount}] `;
     const pullRequest = await GithubService.getPullRequest(pullRequestIds[i]);
     count++;
@@ -107,11 +101,19 @@ async function getPullRequests() {
   return pullRequests;
 }
 
-function pullRequestText(pullRequest) {
+/**
+ * @return name to display in menu
+ */
+function getPullRequestName(pullRequest) {
+  const messageMaxLength = 60;
   const additions = chalk.green(`+${pullRequest.additions}`);
   const deletions = chalk.red(`+${pullRequest.deletions}`);
-  const files = `files: ${pullRequest.changed_files}`;
-  return `${pullRequest.title} ${files} ${additions} ${deletions}`
+  const files = `${pullRequest.changed_files} file${pullRequest.changed_files > 1 ? 's' : ''}`;
+
+  const commitMessage = pullRequest.title.length > messageMaxLength
+    ? pullRequest.title.substr(0, messageMaxLength) + '…'
+    : pullRequest.title;
+  return `${commitMessage} - ${chalk.blue(pullRequest.user.login)} - ${files}, ${additions} ${deletions}`
 }
 
 module.exports = {
