@@ -2,7 +2,7 @@ const config = require('../config.js');
 const fetch = require('node-fetch');
 const cache = require('../utils/cache.js');
 
-const baseUrl = 'https://api.github.com/repos/Samy-Amar/Skello';
+const baseUrl = 'https://api.github.com/repos/skelloapp/skello-app';
 const headers = {
   'Accept': 'Accept: application/vnd.github.v3+json',
   'Authorization': `token ${config.GITHUB_API_KEY}`,
