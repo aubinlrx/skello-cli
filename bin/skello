@@ -1,21 +1,22 @@
 #!/usr/bin/env node
-var chalk = require('chalk');
-var getenv = require('getenv');
-var semver = require('semver');
-var version = process.versions.node;
 
-var supportedVersions = [
+const chalk = require('chalk');
+const getenv = require('getenv');
+const semver = require('semver');
+const version = process.versions.node;
+
+const supportedVersions = [
   { range: '>=10.13.0 <11.0.0', name: 'Active LTS' },
   { range: '>=12.0.0', name: 'Current Release' },
 ];
-var isSupported = supportedVersions.some(function(supported) {
+const isSupported = supportedVersions.some(function(supported) {
   return semver.satisfies(version, supported.range);
 });
 
 if (isSupported) {
   require('../index.js');
 } else {
-  var versionInfo = supportedVersions
+  const versionInfo = supportedVersions
     .map(function(supported) {
       return '* ' + supported.range + ' (' + supported.name + ')';
     })

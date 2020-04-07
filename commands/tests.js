@@ -4,8 +4,7 @@ const fetch = require('node-fetch');
 const _ = require('lodash');
 const moment = require('moment');
 const currentBranchName = require('current-git-branch');
-const cliSelect = require('cli-select');
-const figures = require('figures');
+const inquirer = require('inquirer');
 const ora = require('ora');
 
 // Services
@@ -22,10 +21,10 @@ const NAME = 'tests';
 const helpText =
 `
 ${chalk.bold('NAME')}
-    skello-tests Manage pending tests
+    skello-tests: Manage CI tests
 
 ${chalk.bold('SYNOPSIS')}
-    ${chalk.underline('skello')} ${chalk.underline(NAME)} ${chalk.underline('status')}
+    ${chalk.underline('skello')} ${chalk.underline(NAME)} ${chalk.underline('status')} [branch-name]
     ${chalk.underline('skello')} ${chalk.underline(NAME)} ${chalk.underline('list')}
 `;
 
@@ -53,31 +52,61 @@ function handle(args) {
 }
 
 /*
-* [COMMAND] skello tests status: 
+* [COMMAND] skello tests status:
 */
 async function status(branchName) {
-  if (!branchName || branchName === '') {
-    console.log('Please enter a valid branch name or the current keyword.');
+  branchName = branchName === undefined ? currentBranchName() : branchName;
+
+  console.log("Test status for git branch", chalk.cyan(branchName));
+  const tests = await HerokuService.listTestRuns();
+  const test = tests.find(t => t.commit_branch === branchName);
+  if (test === undefined) {
+    console.log(chalk.red("No test found."));
     return;
   }
 
-  branchName = branchName === 'current' ? currentBranchName() : branchName;
-
-  const tests = await HerokuService.listTestRuns();
-  const test = tests.find(t => t.commit_branch === branchName);
   const result = await parseTestFailuresFor(test);
+  if (typeof result === 'object') {
+    Object.keys(result).forEach((nodeId) => {
+      console.log(`Node #${nodeId}`);
 
-  Object.keys(result).forEach((nodeId) => {
-    console.log(`Node #${nodeId}`);
+      if (result[nodeId].length === 0) {
+        console.log('   Failures parsing for this node not implemented.');
+      } else {
+        result[nodeId].forEach((error) => {
+          console.log(`   ${error}`);
+        });
+      }
+    });
+  }
+}
 
-    if (result[nodeId].length === 0) {
-      console.log('   Failures parsing for this node not implemented.');
-    } else {
-      result[nodeId].forEach((error) => {
-        console.log(`   ${error}`);
-      });
-    }
-  });
+function getTestName(test) {
+  let icon;
+
+  switch (test.status) {
+    case 'succeeded':
+      icon = chalk.green('✔');
+      break;
+    case 'failed':
+      icon = chalk.red('✖');
+      break;
+    case 'building':
+      icon = chalk.yellow('⧖');
+      break;
+    default:
+      icon = chalk.yellow('…');
+      break;
+  }
+
+  // Keep first line of commit message
+  const lf = test.commit_message.indexOf("\n");
+  if (lf != -1) {
+    test.commit_message = test.commit_message.substr(0, lf);
+  }
+
+  const branchName = chalk.bold(`[${test.commit_branch}]`);
+  return `${icon} ${branchName} ${test.commit_message}`;
 }
 
 /*
@@ -89,71 +118,63 @@ async function list() {
   spinner.stop();
 
   tests = _.sortBy(tests, (test) => moment(test.updated_at).format('X')).reverse();
-  tests = _.filter(tests, (test) => test.status === 'failed');
-  const values = _.uniqBy(tests, (test) => test.commit_branch);
-  
-  console.log(`${chalk.red.bold('?')} Please choose a branch:`);
 
-  cliSelect({
-    values: values,
-    valueRenderer: (value, selected) => {
-      let icon;
+  tests = _.uniqBy(tests, (test) => test.commit_branch);
 
-      switch(value.status) {
-        case 'succeeded':
-          icon = chalk.green.bold(figures.tick);
-          break;
-        case 'failed':
-          icon = chalk.red.bold(figures.cross);
-          break;
-        default:
-          icon = chalk.orange.bold(figures.ellipsis);
-          break;
-      }
-
-      if (selected) {
-        return `${icon} [${chalk.blue.bold.underline(value.commit_branch)}] ${chalk.blue.bold(value.commit_message)}`;
-      }
-
-      return `${icon} [${value.commit_branch}] ${value.commit_message}`;
-    },
-    selected: chalk.blue(figures.circleFilled),
-    unselected: figures.circle,
-  }).then(async function(response) {
-      const spinner = ora(`Loading failures ouput...`).start();
-      const result = await parseTestFailuresFor(response.value);
-      spinner.stop();
-      
-      Object.keys(result).forEach((nodeId) => {
-        console.log(`Node #${nodeId}`);
-
-        if (result[nodeId].length === 0) {
-          console.log('   Failures parsing for this node not implemented.');
-        } else {
-          result[nodeId].forEach((error) => {
-            console.log(`   ${error}`);
-          });
-        }
-      });
+  inquirer
+    .prompt({
+      name: 'test',
+      message: 'Please choose a branch:',
+      type: 'list',
+      choices: tests.map(test => ({name: getTestName(test), value: test })),
+      pageSize: 20,
     })
-    .catch(error => console.log(error))
+    .then(async function(answers) {
+      const spinner = ora(`Loading failures ouput...`).start();
+      const result = await parseTestFailuresFor(answers.test);
+      spinner.stop();
+
+      if (result) {
+        Object.keys(result).forEach((nodeId) => {
+          console.log(`Node #${nodeId}`);
+
+          if (result[nodeId].length === 0) {
+            console.log('   Failures parsing for this node not implemented.');
+          } else {
+            result[nodeId].forEach((error) => {
+              console.log(`   ${error}`);
+            });
+          }
+        });
+      }
+    });
 }
 
 async function parseTestFailuresFor(test) {
   let nodes = await HerokuService.listTestNodes(test.id);
 
   if (test.status === 'succeeded') {
-    console.log('All tests passed successfully.');    
+    console.log(chalk.green('All tests passed successfully.'));
     return;
+  }
+
+  if (test.status === 'building') {
+    console.log(chalk.yellow('Test suite is still building.'));
+    return;
+  }
+
+  if (test.status === 'running') {
+    const delta = moment(moment.now()).diff(test.created_at, 'minutes');
+    console.log(chalk.yellow(`Running since ${delta} minutes...`));
   }
 
   nodes = _.sortBy(nodes, (node) => node.index);
   const result = {};
 
-  for (var i = nodes.length - 1; i >= 0; i--) {
+  for (let i = nodes.length - 1; i >= 0; i--) {
     let node = nodes[i]
 
-    if (node.status === 'failed') {
+    if (node.status == 'failed') {
       const res = await fetch(node.output_stream_url);
       const data = await res.text();
 

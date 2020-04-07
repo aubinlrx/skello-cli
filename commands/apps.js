@@ -1,8 +1,7 @@
-const cliSelect = require('cli-select');
+const inquirer = require('inquirer');
 const chalk = require('chalk');
 const openInBrowser = require('open');
 const ora = require('ora');
-const figures = require('figures');
 const moment = require('moment');
 const _ = require('lodash');
 const currentBranchName = require('current-git-branch');
@@ -60,24 +59,18 @@ function handle(args) {
 async function list() {
   const values = await getAppInfos();
 
-  console.log(`${chalk.red.bold('?')} Please choose an app to open:`);
-
-  cliSelect({
-    values: values,
-    valueRenderer: (value, selected) => {
-      if (selected) {
-        return `${chalk.blue.bold.underline(value.text)}`;
-      }
-
-      return `${value.text}`;
-    },
-    selected: chalk.blue(figures.circleFilled),
-    unselected: figures.circle,
-  }).then(response => {
-      console.log(`Opening ${response.value.pullRequest.head.ref} in browser...`);
-      openInBrowser(response.value.url);
+  inquirer
+    .prompt({
+      message: 'Please choose an app to open:',
+      name: 'app',
+      type: 'list',
+      choices: values.map(app => ({ name: app.text, value: app })),
+      pageSize: 20
     })
-    .catch(error => null)
+    .then(answers => {
+      console.log(`Opening ${answers.app.pullRequest.head.ref} in browser...`);
+      openInBrowser(answers.app.url);
+    });
 }
 
 /*
@@ -128,7 +121,7 @@ async function openAppByBranchName(branchName) {
     const app = apps.find(a => a.id === reviewApp.app.id);
 
     if (app) {
-      openInBrowser(app.web_url);  
+      openInBrowser(app.web_url);
     } else {
       console.log('Can\'t open review app.')
     }
@@ -159,7 +152,8 @@ async function getAppInfos() {
       const isMerged = pullRequest.merged_at !== null;
       const isClosed = pullRequest.closed_at !== null;
 
-      const text = `[${pullRequest.head.ref}] - Author: ${pullRequest.user.login} | Head: ${pullRequest.base.ref}`;
+      const commitRef = chalk.blue(`[${pullRequest.head.ref}]`);
+      const text = `${commitRef} Author: ${pullRequest.user.login} | Head: ${pullRequest.base.ref}`;
 
       if (isMerged) text += ' [Merged]';
       if (isClosed) text += ' [Closed]';
